@@ -1,0 +1,6 @@
+assemblyai==0.37.0
+flask==3.1.0
+flask-sock==0.7.0
+ngrok==1.4.0
+python-dotenv==1.0.1
+twilio==9.4.5
