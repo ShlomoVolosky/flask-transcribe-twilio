@@ -1,7 +1,6 @@
 import base64
 import os
 import json
-import os
 
 from flask import Flask, request, Response
 from flask_sock import Sock
@@ -23,18 +22,19 @@ WEBSOCKET_ROUTE = '/realtime'
 account_sid = os.environ['TWILIO_ACCOUNT_SID']
 api_key = os.environ['TWILIO_API_KEY_SID']
 api_secret = os.environ['TWILIO_API_SECRET']
-client = Client(api_key, api_secret, account_sid)
+auth_token = os.environ['TWILIO_AUTHTOKEN']
+client = Client(account_sid, auth_token)
 
 # Twilio phone number to call
 TWILIO_NUMBER = os.environ['TWILIO_NUMBER']
 
 # ngrok authentication
-ngrok.SessionBuilder().authtoken_from_env().connect()
+ngrok.set_auth_token(os.getenv("NGROK_AUTHTOKEN")) # type: ignore
 app = Flask(__name__)
 sock = Sock(app)
 
 # TwilioTranscriber instance
-@app.route(INCOMING_CALL_ROUTE, methods=['GET', 'POST'])
+@app.route(INCOMING_CALL_ROUTE, methods=['GET','POST'])
 def receive_call():
     if request.method == 'POST':
         xml = f"""
@@ -52,7 +52,7 @@ def receive_call():
         return f"Real-time phone call transcription app"
     
 
-@app.route(WEBSOCKET_ROUTE)
+@sock.route(WEBSOCKET_ROUTE)
 def transcription_websocket(ws):
     while True:
         data = json.loads(ws.receive())
@@ -84,10 +84,16 @@ if __name__ == '__main__':
         NGROK_URL = listener.url()
 
         # Set Ngrok URL to the webhook for the Twilio Number
-        twilio_numbers = client.incoming_phone_numbers.list()
-        twilio_number_sid = [num.sid for num in twilio_numbers if num.phone_number == TWILIO_NUMBER][0]
-        client.incoming_phone_numbers(twilio_number_sid).update(account_sid, voice_url=f'{NGROK_URL}{INCOMING_CALL_ROUTE}') # type: ignore
+        #twilio_numbers = client.incoming_phone_numbers.list() # type: ignore
+        #twilio_number_sid = [num.sid for num in twilio_numbers if num.phone_number == TWILIO_NUMBER][0]
+        #client.incoming_phone_numbers(twilio_number_sid).update(account_sid, voice_url=f'{NGROK_URL}{INCOMING_CALL_ROUTE}') # type: ignore
 
+        ###
+        incoming_phone_numbers = client.incoming_phone_numbers(
+            "PNada5ddc9451efdb70268dc406b694c49"
+        ).fetch()
+        print(incoming_phone_numbers.account_sid)
+        ###
         # Start Flask app
         app.run(port=PORT, debug=DEBUG)
     finally:
