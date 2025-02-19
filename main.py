@@ -4,8 +4,7 @@ import json
 
 from flask import Flask, request, Response
 from flask_sock import Sock
-import ngrok
-
+import ngrok 
 from twilio.rest import Client
 from dotenv import load_dotenv
 load_dotenv()
@@ -43,7 +42,7 @@ def receive_call():
                     Speak to see your speech transcribed in the console
                 </Say>
                 <Connect>
-                    <Stream url='wss://{request.host}{WEBSOCKET_ROUTE}' />
+                    <Stream url='wss://0e91-89-208-59-165.ngrok-free.app/{WEBSOCKET_ROUTE}' />
                 </Connect>
             </Response>
             """.strip()
@@ -54,8 +53,15 @@ def receive_call():
 
 @sock.route(WEBSOCKET_ROUTE)
 def transcription_websocket(ws):
+    print(">>> WebSocket connection established with Twilio!")
     while True:
-        data = json.loads(ws.receive())
+        # Read the message from Twilio
+        msg = ws.receive()
+        if not msg:
+            break
+
+        data = json.loads(msg)
+
         match data['event']:
             case 'connected':
                 transcriber = TwilioTranscriber()
@@ -74,7 +80,7 @@ def transcription_websocket(ws):
                 print('Transcription stopped')
                 transcriber.close() # type: ignore
                 print('Connection closed')
-            
+                break
 
 if __name__ == '__main__':
     try:
@@ -84,15 +90,20 @@ if __name__ == '__main__':
         NGROK_URL = listener.url()
 
         # Set Ngrok URL to the webhook for the Twilio Number
-        #twilio_numbers = client.incoming_phone_numbers.list() # type: ignore
-        #twilio_number_sid = [num.sid for num in twilio_numbers if num.phone_number == TWILIO_NUMBER][0]
+        twilio_numbers = client.incoming_phone_numbers.list() # type: ignore
+        twilio_number_sid = [num.sid for num in twilio_numbers if num.phone_number == TWILIO_NUMBER][0]
         #client.incoming_phone_numbers(twilio_number_sid).update(account_sid, voice_url=f'{NGROK_URL}{INCOMING_CALL_ROUTE}') # type: ignore
-
-        ###
-        incoming_phone_numbers = client.incoming_phone_numbers(
+        client.incoming_phone_numbers(
             "PNada5ddc9451efdb70268dc406b694c49"
-        ).fetch()
-        print(incoming_phone_numbers.account_sid)
+        ).update(voice_url="https://0e91-89-208-59-165.ngrok-free.app")
+
+
+
+
+        # incoming_phone_numbers = client.incoming_phone_numbers(
+        #     "PNada5ddc9451efdb70268dc406b694c49"
+        # ).fetch()
+        # print(incoming_phone_numbers.account_sid)
         ###
         # Start Flask app
         app.run(port=PORT, debug=DEBUG)
