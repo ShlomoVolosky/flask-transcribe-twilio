@@ -42,7 +42,7 @@ def receive_call():
                     Speak to see your speech transcribed in the console
                 </Say>
                 <Connect>
-                    <Stream url='wss://0e91-89-208-59-165.ngrok-free.app/{WEBSOCKET_ROUTE}' />
+                    <Stream url='wss://{request.host}{WEBSOCKET_ROUTE}' />
                 </Connect>
             </Response>
             """.strip()
@@ -92,10 +92,10 @@ if __name__ == '__main__':
         # Set Ngrok URL to the webhook for the Twilio Number
         twilio_numbers = client.incoming_phone_numbers.list() # type: ignore
         twilio_number_sid = [num.sid for num in twilio_numbers if num.phone_number == TWILIO_NUMBER][0]
-        #client.incoming_phone_numbers(twilio_number_sid).update(account_sid, voice_url=f'{NGROK_URL}{INCOMING_CALL_ROUTE}') # type: ignore
-        client.incoming_phone_numbers(
-            "PNada5ddc9451efdb70268dc406b694c49"
-        ).update(voice_url="https://0e91-89-208-59-165.ngrok-free.app")
+        client.incoming_phone_numbers(twilio_number_sid).update(account_sid, voice_url=f'{NGROK_URL}{INCOMING_CALL_ROUTE}') # type: ignore
+        # client.incoming_phone_numbers(
+        #     "PNada5ddc9451efdb70268dc406b694c49"
+        # ).update(voice_url="https://0e91-89-208-59-165.ngrok-free.app")
 
 
 
